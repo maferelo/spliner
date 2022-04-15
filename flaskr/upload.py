@@ -16,29 +16,23 @@ from werkzeug.utils import secure_filename
 
 bp = Blueprint("upload", __name__)
 
+
+red = (0, 0, 255)
 t = [0,0,0,0,1,1,1,1]
-c = [[58.3863029989894,116.89745219181054],[105.31685340513181,38.956713078315055],[310.3370211379565,22.44508241175887],[369.9147409302334,111.62765304361334]]
-c_int = np.array(c)
+c = np.array([[54.740454740454695,49.511797511797425],[164.71214071214064,153.00900900900905],[340.7498927498925,145.13770913770907],[441.2835692835691,34.392106392106385]])
 k = 3
 
-def draw_spline(file_path):
+def spline(t, c, k):
+    shape = c.shape[0]
+    u  = np.linspace(0, shape - k, 100)
+    points = np.array(interpolate.splev(u, (t, c.T, k))).T.astype(np.int32)
+    x_range = points[:,0]
+    y_range = points[:,1] 
+    return (np.asarray([x_range, y_range]).T) 
+
+def draw_spline(file_path, points):
     img = cv2.imread(file_path, 1)
-    height, width, channels = img.shape
-
-    x_range = np.arange(width)
-    x_range_new = np.arange(width)
-    y_range = interpolate.splev(x_range_new, (t, c, k), der=0)
-
-    print(len(y_range))
-    red = (0, 0, 255)
-
-    draw_points = (np.asarray([c_int[:,0], c_int[:,1]]).T).astype(np.int32)
-    cv2.polylines(img, [draw_points], False, (0,0,0))  # args: image, points, closed, color
-
-    for n in range(len(y_range)):
-        draw_points = (np.asarray([x_range, y_range[n]]).T).astype(np.int32)   # needs to be int32 and transposed
-        cv2.polylines(img, [draw_points], False, (0,0,0))  # args: image, points, closed, color
-
+    cv2.polylines(img, [points], False, (0,0,0))
     cv2.imwrite(file_path, img)
 
 def allowed_file(filename):
@@ -62,7 +56,8 @@ def upload_file():
             filename = secure_filename(file.filename)
             file_path = join(dirname(realpath(__file__)), current_app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
-            draw_spline(file_path)
+            points = spline(t, c, k)
+            draw_spline(file_path, points)
             return redirect(url_for('upload.download_file', name=filename))
     return '''
     <!doctype html>
