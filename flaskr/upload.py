@@ -7,6 +7,7 @@ from flask import Blueprint
 from flask import current_app
 from flask import flash
 from flask import redirect
+from flask import render_template
 from flask import request
 from flask import send_from_directory
 from flask import url_for
@@ -47,6 +48,30 @@ def upload_file():
             flash('No file part')
             return redirect(request.url)
         file = request.files['file']
+        t_form = request.form["t"]
+
+        try:
+            t_form = np.array(t_form.split(",")).astype(np.int32)
+        except ValueError:
+            flash('Not a valid t')
+            return redirect(request.url)
+
+        c_form = request.form["c"]
+        try:
+            pairs = np.array(c_form.split(",")).astype(np.float)
+            pairs = pairs.reshape(-1,2)
+            c_form = pairs
+        except Exception:
+            flash('Not a valid c')
+            return redirect(request.url)
+
+        k_form = request.form["k"]
+        try:
+            k_form = int(k_form)
+        except ValueError:
+            flash('Not a valid k')
+            return redirect(request.url)
+
         # If the user does not select a file, the browser submits an
         # empty file without a filename.
         if file.filename == '':
@@ -56,19 +81,10 @@ def upload_file():
             filename = secure_filename(file.filename)
             file_path = join(dirname(realpath(__file__)), current_app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
-            points = spline(t, c, k)
+            points = spline(t_form, c_form, k_form)
             draw_spline(file_path, points)
             return redirect(url_for('upload.download_file', name=filename))
-    return '''
-    <!doctype html>
-    <title>Upload new File</title>
-    <h1>Upload new File</h1>
-    <form method=post enctype=multipart/form-data>
-      <input type=file name=file>
-      <input type=submit value=Upload>
-      <input type=text value=Param>
-    </form>
-    '''
+    return render_template("uploads/uploads.html")
 
 @bp.route('/uploads/<name>')
 def download_file(name):
