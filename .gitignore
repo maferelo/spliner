@@ -143,3 +143,6 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+
+# App
+uploads/
