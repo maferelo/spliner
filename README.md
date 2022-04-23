@@ -13,6 +13,8 @@ t, c and k parameters as inputs and draws the spline on the image
 
 > $env:FLASK_ENV = "development"
 
+> flask init-db
+
 > flask run
 
 Go to http://127.0.0.1:5000/
