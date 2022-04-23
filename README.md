@@ -9,6 +9,10 @@ t, c and k parameters as inputs and draws the spline on the image
 
 ### Run
 
+> $env:FLASK_APP = "flaskr"
+
+> $env:FLASK_ENV = "development"
+
 > flask run
 
 Go to http://127.0.0.1:5000/
